@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include "display.h"
 
 class VM {
   private:
@@ -8,7 +9,7 @@ class VM {
     uint8_t SP;
     uint16_t I;
     uint8_t stack[16];
-    uint8_t DISPLAY[64 * 32];
+    Display display;
     uint8_t delay_timer;
     uint8_t sound_timer;
   public:

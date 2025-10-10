@@ -14,10 +14,8 @@ void VM::inicializar(uint16_t pc_inicial) {
       this->V[i] = 0;
       this->stack[i] = 0;
     }
-    if(i < 64 * 32) {
-      this->DISPLAY[i] = 0;
-    }
   }
+  this->display.clear();
 }
 
 void VM::carregarROM(const char* arq_rom, uint16_t pc_inicial) {
@@ -57,9 +55,7 @@ void VM::executarInstrucao() {
     case 0:
       // CLS
       if(inst == 0x00E0){
-        for(int i = 0; i < 64 * 32; i++){ // depois trocar para clear()
-          this->DISPLAY[i] = 0;
-        }
+        this->display.clear();
         break;
       }
     
