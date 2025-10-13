@@ -59,6 +59,26 @@ void VM::executarInstrucao() {
         break;
       }
     
+    // 1NNN: Jump
+    case 1:
+      this->PC = NNN; 
+      break;
+
+    // 6XNN: Set
+    case 6: 
+      V[X] = NN;
+      break;
+
+    // 7XNN: Add
+    case 7: 
+      V[X] += NN; 
+      break;
+
+    // ANNN: Set index
+    case 0xA:
+        I = NNN;
+        break;
+
     default:
       printf("Grupo não implementado. Instrução 0x%04X\n", inst);
       exit(1);
