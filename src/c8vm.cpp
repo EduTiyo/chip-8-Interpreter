@@ -59,6 +59,15 @@ void VM::executarInstrucao() {
       if(inst == 0x00E0){
         this->display.clear();
       }
+      // RET
+      else if (inst == 0x00EE) {
+        if (SP == 0) { printf("Stack underflow!\n"); exit(1); }
+        PC = stack[--SP];
+      }
+      else {
+        printf("Instrução 0x0 não reconhecida: 0x%04X\n", inst);
+        exit(1);
+      }
       break;
     
     // 1NNN: Jump
@@ -78,8 +87,8 @@ void VM::executarInstrucao() {
 
     // ANNN: Set index
     case 0xA:
-        I = NNN;
-        break;
+      I = NNN;
+      break;
 
     // DXYN: Draw
     case 0xD: {
@@ -88,6 +97,13 @@ void VM::executarInstrucao() {
       V[0xF] = this->display.drawSprite(xcoord, ycoord, &this->RAM[I], N);
       break;
     }
+
+    // 2NNN: Call subroutine
+    case 0x2:
+      if (SP >= 16) { printf("Stack overflow!\n"); exit(1); }
+      stack[SP++] = PC + 2;
+      PC = NNN;
+      break;
 
     default:
       printf("Grupo não implementado. Instrução 0x%04X\n", inst);
