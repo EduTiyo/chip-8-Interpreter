@@ -76,9 +76,10 @@ void VM::executarInstrucao() {
     
     // 1NNN: Jump
     case 1:
-      this->PC = NNN; 
+      this->PC = NNN;
       break;
-    
+
+        
     case 3:
       // 3XNN: Skip next if equal
       if(V[X] == NN) {
