@@ -63,6 +63,10 @@ void VM::executarInstrucao() {
       else if (inst == 0x00EE) {
         if (SP == 0) { printf("Stack underflow!\n"); exit(1); }
         PC = stack[--SP];
+      } 
+      // NOP
+      else if (inst == 0x0000) {
+        // No operation
       }
       else {
         printf("Instrução 0x0 não reconhecida: 0x%04X\n", inst);
@@ -73,6 +77,13 @@ void VM::executarInstrucao() {
     // 1NNN: Jump
     case 1:
       this->PC = NNN; 
+      break;
+    
+    case 3:
+      // 3XNN: Skip next if equal
+      if(V[X] == NN) {
+        this->PC += 2;
+      }
       break;
 
     // 6XNN: Set
@@ -90,6 +101,11 @@ void VM::executarInstrucao() {
       I = NNN;
       break;
 
+    case 0xC:
+      // CXNN: Random
+      V[X] = (rand() % 256) & NN;
+      break;
+
     // DXYN: Draw
     case 0xD: {
       int xcoord = V[X] % 64;
@@ -101,8 +117,22 @@ void VM::executarInstrucao() {
     // 2NNN: Call subroutine
     case 0x2:
       if (SP >= 16) { printf("Stack overflow!\n"); exit(1); }
-      stack[SP++] = PC + 2;
+      stack[SP++] = PC;
       PC = NNN;
+      break;
+
+    case 0xF:
+    // FX33: Store BCD representation
+      if (NN == 0x33) {
+        uint8_t valor = V[X];
+        const int h = valor / 100;
+        const int t = (valor - h * 100) / 10;
+        const int o = valor - h * 100 - t * 10;
+
+        RAM[I] = h;
+        RAM[I + 1] = t;
+        RAM[I + 2] = o;
+      } 
       break;
 
     default:
