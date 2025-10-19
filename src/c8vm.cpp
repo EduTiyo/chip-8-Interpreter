@@ -117,6 +117,58 @@ void VM::executarInstrucao() {
       }
       break;
 
+    case 8:
+      // 8XY0: Set Vx = Vy
+      if (N == 0) {
+        V[X] = V[Y];
+      }
+      // 8XY1: Set Vx = Vx OR Vy
+      else if (N == 1) {
+        V[X] |= V[Y];
+      }
+      // 8XY2: Set Vx = Vx AND Vy
+      else if (N == 2) {
+        V[X] &= V[Y];
+      }
+      // 8XY3: Set Vx = Vx XOR Vy
+      else if (N == 3) {
+        V[X] ^= V[Y];
+      }
+      // 8XY4: Add Vy to Vx, set VF = carry
+      else if (N == 4) {
+        uint16_t soma = V[X] + V[Y];
+        V[0xF] = (soma > 255) ? 1 : 0;
+        V[X] = soma & 0xFF;
+      }
+      // 8XY5: Subtract Vy from Vx, set VF = NOT borrow
+      else if (N == 5) {
+        V[0xF] = (V[X] >= V[Y]) ? 1 : 0;
+        V[X] -= V[Y];
+      }
+      // 8XY6: Shift Vx right by 1, set VF = least
+      else if (N == 6) {
+        V[0xF] = V[X] & 0x01;
+        V[X] >>= 1;
+      }
+      // 8XY7: Set Vx = Vy - Vx, set VF = NOT borrow
+      else if (N == 7) {
+        if (V[Y] > V[X]) {
+          V[0xF] = 1;
+        } else {
+          V[0xF] = 0;
+        }
+        V[X] = V[Y] - V[X];
+      }
+      // 8XYE: Shift Vx left by 1, set VF = most
+      else if (N == 0xE) {
+        V[0xF] = V[X] & 0x80;
+        V[X] <<= 1;
+      }
+      else {
+        printf("Instrução 0x8 não reconhecida: 0x%04X\n", inst);
+        exit(1);
+      }
+
     // ANNN: Set index
     case 0xA:
       I = NNN;
