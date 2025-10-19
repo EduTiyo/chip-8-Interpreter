@@ -169,6 +169,7 @@ void VM::executarInstrucao() {
         printf("Instrução 0x8 não reconhecida: 0x%04X\n", inst);
         exit(1);
       }
+      break;
 
     // ANNN: Set index
     case 0xA:
@@ -212,7 +213,10 @@ void VM::executarInstrucao() {
         RAM[I] = h;
         RAM[I + 1] = t;
         RAM[I + 2] = o;
-      } 
+      } else {
+        printf("Instrução 0xF não reconhecida: 0x%04X\n", inst);
+        exit(1);
+      }
       break;
 
     default:
