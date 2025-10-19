@@ -174,6 +174,11 @@ void VM::executarInstrucao() {
       I = NNN;
       break;
 
+    case 0xB:
+      // BNNN: Jump with offset
+      PC = V[0] + NNN;
+      break;
+
     case 0xC:
       // CXNN: Random
       V[X] = (rand() % 256) & NN;
@@ -186,6 +191,7 @@ void VM::executarInstrucao() {
       V[0xF] = this->display.drawSprite(xcoord, ycoord, &this->RAM[I], N);
       break;
     }
+
 
     // 2NNN: Call subroutine
     case 0x2:
