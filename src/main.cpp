@@ -1,5 +1,6 @@
 #include "c8vm.h"
 #include "defs.h"
+#include "SDL2/SDL.h"
 
 int main(int argc, char const *argv[])
 {
@@ -9,8 +10,10 @@ int main(int argc, char const *argv[])
   #ifdef DEBUG
     vm.imprimirRegistradores();
   #endif
-  while(1) {
+
+  while(vm.displayIsOpen()) {
     vm.executarInstrucao();
+    vm.renderDisplay();
     #ifdef DEBUG
       vm.imprimirRegistradores();
     #endif

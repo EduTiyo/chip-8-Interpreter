@@ -118,3 +118,11 @@ void VM::imprimirRegistradores() {
     }
     printf("\n");
 }
+
+bool VM::displayIsOpen() {
+  return this->display.isOpen();
+}
+
+void VM::renderDisplay() {
+  this->display.render();
+}

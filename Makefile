@@ -1,6 +1,6 @@
 CXX = g++
 CXXFLAGS = -Wall -std=c++17
-SRC = src/main.cpp src/c8vm.cpp src/display.cpp
+SRC = src/main.cpp src/c8vm.cpp src/display.cpp -lSDL2
 TARGET = chip8
 
 all:
