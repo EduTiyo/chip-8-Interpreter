@@ -72,11 +72,37 @@ void VM::executarInstrucao() {
     
     // 1NNN: Jump
     case 1:
-      this->PC = NNN; 
+      this->PC = NNN;
       break;
 
-    // 6XNN: Set
-    case 6: 
+    // 2NNN: Call subroutine
+    case 2:
+      if (SP >= 16) { printf("Stack overflow!\n"); exit(1); }
+      stack[SP++] = PC;
+      PC = NNN;
+      break;
+
+    // 3XNN: Skip next instruction if VX == NN
+    case 3:
+      if (V[X] == NN)
+        PC += 2;
+      break;
+
+    // 4XNN: Skip next instruction if VX != NN
+    case 4:
+      if (V[X] != NN)
+        PC += 2;
+      break;
+
+    // 5XY0: Skip next instruction if VX == VY
+    case 5:
+      if ((inst & 0x000F) == 0)
+        if (V[X] == V[Y])
+          PC += 2;
+      break;
+
+    // 6XNN: Set VX = NN
+    case 6:
       V[X] = NN;
       break;
 
@@ -85,7 +111,14 @@ void VM::executarInstrucao() {
       V[X] += NN; 
       break;
 
-    // ANNN: Set index
+    // 9XY0: Skip next instruction if VX != VY
+    case 9:
+      if ((inst & 0x000F) == 0)
+        if (V[X] != V[Y])
+          PC += 2;
+      break;
+
+    // ANNN: Set
     case 0xA:
       I = NNN;
       break;
@@ -97,13 +130,6 @@ void VM::executarInstrucao() {
       V[0xF] = this->display.drawSprite(xcoord, ycoord, &this->RAM[I], N);
       break;
     }
-
-    // 2NNN: Call subroutine
-    case 0x2:
-      if (SP >= 16) { printf("Stack overflow!\n"); exit(1); }
-      stack[SP++] = PC + 2;
-      PC = NNN;
-      break;
 
     default:
       printf("Grupo não implementado. Instrução 0x%04X\n", inst);
