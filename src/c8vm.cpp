@@ -86,6 +86,20 @@ void VM::executarInstrucao() {
       }
       break;
 
+    // 4XNN: Skip next if not equal
+    case 4:
+      if(V[X] != NN) {
+        this->PC += 2;
+      }
+      break;
+
+    // 5xy0 : Skip next if Vx == Vy
+    case 5:
+      if(V[X] == V[Y]) {
+        this->PC += 2;
+      }
+      break;
+
     // 6XNN: Set
     case 6: 
       V[X] = NN;
@@ -94,6 +108,13 @@ void VM::executarInstrucao() {
     // 7XNN: Add
     case 7: 
       V[X] += NN; 
+      break;
+
+    // 9XY0: Skip next if Vx != Vy
+    case 9:
+      if(V[X] != V[Y]) {
+        this->PC += 2;
+      }
       break;
 
     // ANNN: Set index
