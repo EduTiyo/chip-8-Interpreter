@@ -15,6 +15,11 @@ void VM::inicializar(uint16_t pc_inicial) {
       this->stack[i] = 0;
     }
   }
+
+  for(int i = 0; i < 16; i++) {
+      keypad[i] = 0; // liberar as teclas
+  }
+
   this->display.clear();
 }
 
@@ -194,6 +199,25 @@ void VM::executarInstrucao() {
       break;
     }
 
+    case 0xE:
+    // EX9E: Skip next if key in VX is pressed
+      if (NN == 0x9E) {
+        if (isKeyPressed(V[X])) {
+          this->PC += 2;
+        }
+      }
+    // EXA1: Skip next if key in VX is NOT pressed
+      else if (NN == 0xA1) {
+        if (!isKeyPressed(V[X])) {
+          this->PC += 2;
+        }
+      }
+      else {
+        printf("Instrução 0xE não reconhecida: 0x%04X\n", inst);
+        exit(1);
+      }
+      break;
+
 
     // 2NNN: Call subroutine
     case 0x2:
@@ -239,4 +263,12 @@ bool VM::displayIsOpen() {
 
 void VM::renderDisplay() {
   this->display.render();
+}
+
+void VM::setKey(uint8_t key, bool pressed) {
+    if (key < 16) keypad[key] = pressed;
+}
+
+bool VM::isKeyPressed(uint8_t key) {
+    return (key < 16) ? keypad[key] : false;
 }

@@ -12,6 +12,7 @@ class VM {
     Display display;
     uint8_t delay_timer;
     uint8_t sound_timer;
+    uint8_t keypad[16];
 
     public:
     VM() : display(10) {}
@@ -21,4 +22,6 @@ class VM {
     void imprimirRegistradores();
     bool displayIsOpen();
     void renderDisplay();
+    void setKey(uint8_t key, bool pressed);
+    bool isKeyPressed(uint8_t key);
   };
