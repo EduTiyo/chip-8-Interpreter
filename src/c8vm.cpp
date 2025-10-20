@@ -237,7 +237,13 @@ void VM::executarInstrucao() {
         RAM[I] = h;
         RAM[I + 1] = t;
         RAM[I + 2] = o;
-      } else {
+      } else if (NN == 0x65) {
+        // FX65 Load the memory data starting at address I into the registers v0 to vx
+        for (int i = 0; i <= X; i++) {
+          V[i] = RAM[I + i];
+        }
+      }
+      else {
         printf("Instrução 0xF não reconhecida: 0x%04X\n", inst);
         exit(1);
       }
