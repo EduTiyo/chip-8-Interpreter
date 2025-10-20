@@ -242,6 +242,14 @@ void VM::executarInstrucao() {
         for (int i = 0; i <= X; i++) {
           V[i] = RAM[I + i];
         }
+      } else if (NN == 0x29) {
+        // FX29: set sprite location for digit VX to I
+        I = V[X] * 0x05;
+      } else if (NN == 0x55) {
+        // LD[I], VX: store register from V0 to VX int the main memory, starting at location I.
+        for (int i = 0; i <= X; i++) {
+          RAM[I + i] = V[i];
+        }
       }
       else {
         printf("Instrução 0xF não reconhecida: 0x%04X\n", inst);
