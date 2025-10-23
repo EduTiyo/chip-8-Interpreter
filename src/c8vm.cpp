@@ -227,8 +227,34 @@ void VM::executarInstrucao() {
       break;
 
     case 0xF:
-    // FX33: Store BCD representation
-      if (NN == 0x33) {
+      // FX07: Vx = delay_timer
+      if (NN == 0x07) {        
+          V[X] = delay_timer;
+      }
+      // FX15: delay_timer = Vx
+      else if (NN == 0x15) {   
+          delay_timer = V[X];
+      }
+      // FX18: sound_timer = Vx
+      else if (NN == 0x18) {   
+          sound_timer = V[X];
+      } 
+      // FX1E: I = I + Vx
+      else if (NN == 0x1E) {    
+          uint16_t soma = I + V[X];
+          if (soma > 0xFFF) {
+              V[0xF] = 1; 
+          } else {
+              V[0xF] = 0;
+          }
+          I = soma & 0xFFF;
+      }
+      // FX29: set sprite location for digit VX to I
+      else if (NN == 0x29) {
+        I = V[X] * 0x05;
+      }
+      // FX33: Store BCD representation
+      else if (NN == 0x33) {
         uint8_t valor = V[X];
         const int h = valor / 100;
         const int t = (valor - h * 100) / 10;
@@ -242,9 +268,6 @@ void VM::executarInstrucao() {
         for (int i = 0; i <= X; i++) {
           V[i] = RAM[I + i];
         }
-      } else if (NN == 0x29) {
-        // FX29: set sprite location for digit VX to I
-        I = V[X] * 0x05;
       } else if (NN == 0x55) {
         // LD[I], VX: store register from V0 to VX int the main memory, starting at location I.
         for (int i = 0; i <= X; i++) {
