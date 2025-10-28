@@ -227,8 +227,23 @@ void VM::executarInstrucao() {
       break;
 
     case 0xF:
+     // FX0A: Wait for key press, store in VX
+      if (NN == 0x0A) {
+          bool keyPressed = false;
+          for (int i = 0; i < 16; i++) {
+              if (keypad[i]) {
+                  V[X] = i; 
+                  keyPressed = true;
+                  break;
+              }
+          }
+
+          if (!keyPressed) {
+              PC -= 2; 
+          }
+      }
       // FX07: Vx = delay_timer
-      if (NN == 0x07) {        
+      else if (NN == 0x07) {        
           V[X] = delay_timer;
       }
       // FX15: delay_timer = Vx
@@ -251,7 +266,7 @@ void VM::executarInstrucao() {
       }
       // FX29: set sprite location for digit VX to I
       else if (NN == 0x29) {
-        I = V[X] * 0x05;
+        I = (V[X] & 0x0F) * 0x05;
       }
       // FX33: Store BCD representation
       else if (NN == 0x33) {
