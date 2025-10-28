@@ -2,25 +2,53 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define FONTSET_START 0x50
+
 void VM::inicializar(uint16_t pc_inicial) {
   this->PC = pc_inicial;
   this->SP = 0;
   this->I = 0;
   this->delay_timer = 0;
   this->sound_timer = 0;
+  
+  // Limpa a RAM (4096 bytes)
   for(int i = 0; i < 4096; i++) {
     this->RAM[i] = 0;
-    if(i < 16) {
-      this->V[i] = 0;
-      this->stack[i] = 0;
-    }
   }
 
+  // Limpa Registradores (16), Stack (16) e Keypad (16)
   for(int i = 0; i < 16; i++) {
-      keypad[i] = 0; // liberar as teclas
+    this->V[i] = 0;
+    this->stack[i] = 0;
+    this->keypad[i] = 0; // liberar as teclas
   }
 
   this->display.clear();
+
+  static const uint8_t fontset[80] = {
+    0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+    0x20, 0x60, 0x20, 0x20, 0x70, // 1
+    0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+    0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+    0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+    0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+    0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+    0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+    0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+    0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+    0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+    0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+    0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+    0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+    0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+    0xF0, 0x80, 0xF0, 0x80, 0x80  // F
+  };
+
+  // Carrega os sprites da fonte na RAM a partir do endereço 0x50 (FONTSET_START)
+  for (int i = 0; i < 80; i++) {
+    this->RAM[FONTSET_START + i] = fontset[i];
+  }
+
 }
 
 void VM::carregarROM(const char* arq_rom, uint16_t pc_inicial) {
@@ -52,7 +80,7 @@ void VM::executarInstrucao() {
   this->PC += 2;
   uint8_t  grupo = inst >> 12;
   uint8_t  X     = (inst & 0x0F00) >> 8;
-  uint8_t  Y     = (inst & 0X00F0) >> 4;
+  uint8_t  Y     = (inst & 0x00F0) >> 4;
   uint8_t  N     = (inst & 0x000F);
   uint8_t  NN    = (inst & 0x00FF);
   uint16_t NNN   = (inst & 0x0FFF);
@@ -73,9 +101,9 @@ void VM::executarInstrucao() {
       else if (inst == 0x0000) {
         // No operation
       }
+      // SYS NNN (Ignorado)
       else {
-        printf("Instrução 0x0 não reconhecida: 0x%04X\n", inst);
-        exit(1);
+        printf("Instrução 0x0 (SYS) não implementada: 0x%04X\n", inst);
       }
       break;
     
@@ -158,16 +186,12 @@ void VM::executarInstrucao() {
       }
       // 8XY7: Set Vx = Vy - Vx, set VF = NOT borrow
       else if (N == 7) {
-        if (V[Y] > V[X]) {
-          V[0xF] = 1;
-        } else {
-          V[0xF] = 0;
-        }
+        V[0xF] = (V[Y] >= V[X]) ? 1 : 0; // **CORRIGIDO**
         V[X] = V[Y] - V[X];
       }
       // 8XYE: Shift Vx left by 1, set VF = most
       else if (N == 0xE) {
-        V[0xF] = V[X] & 0x80;
+        V[0xF] = V[X] >> 7; // **CORRIGIDO**
         V[X] <<= 1;
       }
       else {
@@ -227,72 +251,7 @@ void VM::executarInstrucao() {
       break;
 
     case 0xF:
-     // FX0A: Wait for key press, store in VX
-      if (NN == 0x0A) {
-          bool keyPressed = false;
-          for (int i = 0; i < 16; i++) {
-              if (keypad[i]) {
-                  V[X] = i; 
-                  keyPressed = true;
-                  break;
-              }
-          }
-
-          if (!keyPressed) {
-              PC -= 2; 
-          }
-      }
-      // FX07: Vx = delay_timer
-      else if (NN == 0x07) {        
-          V[X] = delay_timer;
-      }
-      // FX15: delay_timer = Vx
-      else if (NN == 0x15) {   
-          delay_timer = V[X];
-      }
-      // FX18: sound_timer = Vx
-      else if (NN == 0x18) {   
-          sound_timer = V[X];
-      } 
-      // FX1E: I = I + Vx
-      else if (NN == 0x1E) {    
-          uint16_t soma = I + V[X];
-          if (soma > 0xFFF) {
-              V[0xF] = 1; 
-          } else {
-              V[0xF] = 0;
-          }
-          I = soma & 0xFFF;
-      }
-      // FX29: set sprite location for digit VX to I
-      else if (NN == 0x29) {
-        I = (V[X] & 0x0F) * 0x05;
-      }
-      // FX33: Store BCD representation
-      else if (NN == 0x33) {
-        uint8_t valor = V[X];
-        const int h = valor / 100;
-        const int t = (valor - h * 100) / 10;
-        const int o = valor - h * 100 - t * 10;
-
-        RAM[I] = h;
-        RAM[I + 1] = t;
-        RAM[I + 2] = o;
-      } else if (NN == 0x65) {
-        // FX65 Load the memory data starting at address I into the registers v0 to vx
-        for (int i = 0; i <= X; i++) {
-          V[i] = RAM[I + i];
-        }
-      } else if (NN == 0x55) {
-        // LD[I], VX: store register from V0 to VX int the main memory, starting at location I.
-        for (int i = 0; i <= X; i++) {
-          RAM[I + i] = V[i];
-        }
-      }
-      else {
-        printf("Instrução 0xF não reconhecida: 0x%04X\n", inst);
-        exit(1);
-      }
+      executarInstrucaoF(X, NN, inst);
       break;
 
     default:
@@ -323,4 +282,86 @@ void VM::setKey(uint8_t key, bool pressed) {
 
 bool VM::isKeyPressed(uint8_t key) {
     return (key < 16) ? keypad[key] : false;
+}
+
+void VM::executarInstrucaoF(uint8_t X, uint8_t NN, uint16_t inst) {
+    // FX0A: Wait for key press, store in VX
+    if (NN == 0x0A) {
+        bool keyPressed = false;
+        for (int i = 0; i < 16; i++) {
+            if (this->keypad[i]) {
+                this->V[X] = i; 
+                keyPressed = true;
+                break;
+            }
+        }
+
+        if (!keyPressed) {
+            this->PC -= 2; 
+        }
+    }
+    // FX07: Vx = delay_timer
+    else if (NN == 0x07) {        
+        this->V[X] = this->delay_timer;
+    }
+    // FX15: delay_timer = Vx
+    else if (NN == 0x15) {   
+        this->delay_timer = this->V[X];
+    }
+    // FX18: sound_timer = Vx
+    else if (NN == 0x18) {   
+        this->sound_timer = this->V[X];
+    } 
+    // FX1E: I = I + Vx
+    else if (NN == 0x1E) {    
+        uint16_t soma = this->I + this->V[X];
+        this->V[0xF] = (soma > 0xFFF) ? 1 : 0; 
+        this->I = soma; // **CORRIGIDO**
+    }
+    // FX29: set sprite location for digit VX to I
+    else if (NN == 0x29) {
+        this->I = FONTSET_START + (this->V[X] & 0x0F) * 0x05;
+    }
+    // FX33: Store BCD representation
+    else if (NN == 0x33) {
+        uint8_t valor = this->V[X];
+        this->RAM[this->I]     = valor / 100;
+        this->RAM[this->I + 1] = (valor / 10) % 10;
+        this->RAM[this->I + 2] = valor % 10;
+    } 
+    // FX65: Load memory into V0..VX
+    else if (NN == 0x65) {
+        for (int i = 0; i <= X; i++) {
+            this->V[i] = this->RAM[this->I + i];
+        }
+    } 
+    // FX55: Store V0..VX into memory
+    else if (NN == 0x55) {
+        for (int i = 0; i <= X; i++) {
+            this->RAM[this->I + i] = this->V[i];
+        }
+    }
+
+    else {
+        printf("Instrução 0xF não reconhecida: 0x%04X\n", inst);
+        exit(1);
+    }
+}
+
+void VM::atualizarTimers() {
+    // Esta função é chamada 60 vezes por segundo (60Hz) pelo main.cpp
+
+    // Decrementa o delay timer se ele for maior que zero
+    if (this->delay_timer > 0) {
+        this->delay_timer--;
+    }
+
+    // Decrementa o sound timer se ele for maior que zero
+    if (this->sound_timer > 0) {
+        if (this->sound_timer == 1) {
+            printf("BEEP_OFF\n"); // Apenas um exemplo
+        }
+        this->sound_timer--;
+        
+    }
 }

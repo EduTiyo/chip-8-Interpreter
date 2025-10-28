@@ -2,19 +2,43 @@
 #include "defs.h"
 #include "SDL2/SDL.h"
 
+// --- LÓGICA DE TIMING
+
+// Specs: "A tela... 60Hz" e "Os temporizadores... 60Hz."
+const int TIMER_HERTZ = 60;
+
+// Specs: "A velocidade... configurável... (ex: 500Hz)"
+const int CPU_HERTZ = 700; 
+
+// Quantos ciclos de CPU por frame (700Hz / 60Hz = ~11.6)
+// Arredondamos para 12
+const int CICLOS_POR_FRAME = CPU_HERTZ / TIMER_HERTZ;
+
+// Tempo de cada frame (1000ms / 60Hz = 16.66ms)
+const int FRAME_DELAY = 1000 / TIMER_HERTZ; 
+
+
 int main(int argc, char const *argv[])
 {
   VM vm;
   vm.inicializar(0x200);
   vm.carregarROM(argv[1], 0x200);
-  #ifdef DEBUG
-    vm.imprimirRegistradores();
-  #endif
 
-  while(vm.displayIsOpen()) {
+  // Flag para controlar o loop principal
+  bool quit = false;
+
+  while(!quit) {
+
+    // Pega o tempo exato de quando o frame começou
+    Uint32 frameStart = SDL_GetTicks();
+    
+    // --- Processamento de Input ---
     SDL_Event event;
     while(SDL_PollEvent(&event)) {
-        if(event.type == SDL_QUIT) return 0;
+        if(event.type == SDL_QUIT) {
+            quit = true; // Seta a flag para sair do loop
+            break; // Sai do loop de eventos
+        }
 
         if(event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
             bool pressed = (event.type == SDL_KEYDOWN);
@@ -39,11 +63,21 @@ int main(int argc, char const *argv[])
         }
     }
 
-    vm.executarInstrucao();
+    for (int i = 0; i < CICLOS_POR_FRAME; ++i) {
+        vm.executarInstrucao();
+    }
+
+    vm.atualizarTimers();
+
     vm.renderDisplay();
-    #ifdef DEBUG
-      vm.imprimirRegistradores();
-    #endif
+
+
+    Uint32 frameTime = SDL_GetTicks() - frameStart;
+
+    if (frameTime < FRAME_DELAY) {
+        SDL_Delay(FRAME_DELAY - frameTime);
+    }
   }
+  
   return 0;
 }
