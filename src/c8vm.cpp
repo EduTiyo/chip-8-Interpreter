@@ -186,12 +186,12 @@ void VM::executarInstrucao() {
       }
       // 8XY7: Set Vx = Vy - Vx, set VF = NOT borrow
       else if (N == 7) {
-        V[0xF] = (V[Y] >= V[X]) ? 1 : 0; // **CORRIGIDO**
+        V[0xF] = (V[Y] >= V[X]) ? 1 : 0;
         V[X] = V[Y] - V[X];
       }
       // 8XYE: Shift Vx left by 1, set VF = most
       else if (N == 0xE) {
-        V[0xF] = V[X] >> 7; // **CORRIGIDO**
+        V[0xF] = V[X] >> 7;
         V[X] <<= 1;
       }
       else {
