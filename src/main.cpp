@@ -1,29 +1,53 @@
 #include "c8vm.h"
 #include "defs.h"
 #include "SDL2/SDL.h"
+#include <string>
+#include <iostream>
+
+using namespace std;
 
 // --- LÓGICA DE TIMING
+int TIMER_HERTZ = 60;
 
-// Specs: "A tela... 60Hz" e "Os temporizadores... 60Hz."
-const int TIMER_HERTZ = 60;
+int CPU_HERTZ = 500;
 
-// Specs: "A velocidade... configurável... (ex: 500Hz)"
-const int CPU_HERTZ = 700; 
+int CICLOS_POR_FRAME = (CPU_HERTZ / TIMER_HERTZ);
 
-// Quantos ciclos de CPU por frame (700Hz / 60Hz = ~11.6)
-// Arredondamos para 12
-const int CICLOS_POR_FRAME = CPU_HERTZ / TIMER_HERTZ;
+int FRAME_DELAY = (1000 / TIMER_HERTZ);
 
-// Tempo de cada frame (1000ms / 60Hz = 16.66ms)
-const int FRAME_DELAY = 1000 / TIMER_HERTZ; 
-
+int scale = 10; 
 
 int main(int argc, char const *argv[])
 {
-  VM vm;
+  char* rom_path;
+  for (int i = 0; i < argc; i++)
+  {
+    string arg = argv[i];
+    if (arg == "--help") {
+      cout << "Uso: ./chip8 [opcoes] roms/NOME_DA_ROM" << endl;
+      cout << "Opções de Linha de Comando:" << endl;
+      cout << "--clock <velocidade>: Define a velocidade do clock da CPU em Hz. Padrão: 500Hz." << endl;
+      cout << "--scale <fator>: Define o fator de escala da janela. \n Um fator de 10 resulta em uma janela de 640x320. Padrão: 10." << endl;
+      cout << "--help: Exibe esta mensagem de ajuda." << endl;
+      return 0;
+    }
+    else if (arg == "--scale" && i + 1 < argc) {
+      scale = stoi(argv[i + 1]);
+    }
+    else if (arg == "--clock" && i + 1 < argc) {
+      CPU_HERTZ = stoi(argv[i + 1]);
+      CICLOS_POR_FRAME = (CPU_HERTZ / TIMER_HERTZ);
+      FRAME_DELAY = (1000 / TIMER_HERTZ);
+    }
+    else {
+      rom_path = (char*)arg.c_str();
+    }
+  }
+
+  VM vm(scale);
   vm.inicializar(0x200);
 
-  if (!vm.carregarROM(argv[1], 0x200)) {
+  if (!vm.carregarROM(rom_path, 0x200)) {
     printf("Uso correto: %s roms/NOME_DA_ROM\n", argv[0]);
     return 1; // Sai se não conseguiu carregar a ROM
   }

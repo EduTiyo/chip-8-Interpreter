@@ -106,7 +106,6 @@ bool VM::carregarROM(const char* arq_rom, uint16_t pc_inicial) {
   return true;
 }
 
-
 void VM::executarInstrucao() {
   uint16_t inst = (this->RAM[this->PC] << 8) | this->RAM[this->PC+1];
   printf("PC: 0x%04X - Opcode: 0x%04X\n", this->PC, inst);

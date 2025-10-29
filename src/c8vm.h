@@ -18,6 +18,7 @@ class VM {
 
     public:
     VM() : display(10) {}
+    VM(int pixel_scale) : display(pixel_scale) {}
     void inicializar(uint16_t pc_inicial);
     bool carregarROM(const char* arq_rom, uint16_t pc_inicial);
     void executarInstrucao();
