@@ -22,8 +22,12 @@ int main(int argc, char const *argv[])
 {
   VM vm;
   vm.inicializar(0x200);
-  vm.carregarROM(argv[1], 0x200);
 
+  if (!vm.carregarROM(argv[1], 0x200)) {
+    printf("Uso correto: %s roms/NOME_DA_ROM\n", argv[0]);
+    return 1; // Sai se não conseguiu carregar a ROM
+  }
+  
   // Flag para controlar o loop principal
   bool quit = false;
 

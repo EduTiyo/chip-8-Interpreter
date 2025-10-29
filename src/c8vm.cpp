@@ -1,6 +1,8 @@
 #include "c8vm.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/stat.h>
+#include <string.h>
 
 #define FONTSET_START 0x50
 
@@ -51,12 +53,41 @@ void VM::inicializar(uint16_t pc_inicial) {
 
 }
 
-void VM::carregarROM(const char* arq_rom, uint16_t pc_inicial) {
+bool VM::romValida(const char* nome) {
+    // Caminho base aceito
+    const char* base = "roms/";
+
+    // Verifica se o nome começa com roms/
+    if (strncmp(nome, base, strlen(base)) != 0) {
+        printf("Erro: ROM deve estar no diretório roms/\n");
+        return false;
+    }
+
+    // Verifica se o arquivo existe
+    struct stat buffer;
+    if (stat(nome, &buffer) != 0) {
+        printf("Erro: Arquivo %s não encontrado.\n", nome);
+        return false;
+    }
+
+    // Verifica se não é diretório
+    if (S_ISDIR(buffer.st_mode)) {
+        printf("Erro: %s é um diretório, não um arquivo.\n", nome);
+        return false;
+    }
+
+    return true;
+}
+
+bool VM::carregarROM(const char* arq_rom, uint16_t pc_inicial) {
+  if (!romValida(arq_rom)) {
+    return false;
+  }
+
   FILE* rom = fopen(arq_rom, "rb");
-  
   if(rom == NULL) {
     printf("Erro ao abrir o arquivo %s\n", arq_rom);
-    return;
+    return false;
   }
   
   fseek(rom, 0, SEEK_END);
@@ -66,12 +97,15 @@ void VM::carregarROM(const char* arq_rom, uint16_t pc_inicial) {
   if(tam_rom > (4096 - pc_inicial)) {
     printf("Erro: ROM muito grande para caber na memoria\n");
     fclose(rom);
-    return;
+    return false;
   }
 
   fread(&this->RAM[pc_inicial], sizeof(uint8_t), tam_rom, rom);
   fclose(rom);
+
+  return true;
 }
+
 
 void VM::executarInstrucao() {
   uint16_t inst = (this->RAM[this->PC] << 8) | this->RAM[this->PC+1];

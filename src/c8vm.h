@@ -14,11 +14,12 @@ class VM {
     uint8_t sound_timer;
     uint8_t keypad[16];
     void executarInstrucaoF(uint8_t X, uint8_t NN, uint16_t inst);
+    bool romValida(const char* arq_rom);
 
     public:
     VM() : display(10) {}
     void inicializar(uint16_t pc_inicial);
-    void carregarROM(const char* arq_rom, uint16_t pc_inicial);
+    bool carregarROM(const char* arq_rom, uint16_t pc_inicial);
     void executarInstrucao();
     void imprimirRegistradores();
     bool displayIsOpen();
