@@ -1,5 +1,6 @@
 #include <stdint.h>
 #include "display.h"
+#include "audio.h"
 
 class VM {
   private:
@@ -10,6 +11,7 @@ class VM {
     uint16_t I;
     uint16_t stack[16];
     Display display;
+    Audio audio;
     uint8_t delay_timer;
     uint8_t sound_timer;
     uint8_t keypad[16];
@@ -17,8 +19,8 @@ class VM {
     bool romValida(const char* arq_rom);
 
     public:
-    VM() : display(10) {}
-    VM(int pixel_scale) : display(pixel_scale) {}
+    VM() : display(10), audio(44100) {}
+    VM(int pixel_scale) : display(pixel_scale), audio(44100) {}
     void inicializar(uint16_t pc_inicial);
     bool carregarROM(const char* arq_rom, uint16_t pc_inicial);
     void executarInstrucao();

@@ -382,19 +382,17 @@ void VM::executarInstrucaoF(uint8_t X, uint8_t NN, uint16_t inst) {
 }
 
 void VM::atualizarTimers() {
-    // Esta função é chamada 60 vezes por segundo (60Hz) pelo main.cpp
-
-    // Decrementa o delay timer se ele for maior que zero
     if (this->delay_timer > 0) {
-        this->delay_timer--;
+        --this->delay_timer;
+    }
+    if (this->sound_timer > 0) {
+        --this->sound_timer;
     }
 
-    // Decrementa o sound timer se ele for maior que zero
+    // controla reprodução do beep via SDL
     if (this->sound_timer > 0) {
-        if (this->sound_timer == 1) {
-            printf("BEEP_OFF\n"); // Apenas um exemplo
-        }
-        this->sound_timer--;
-        
+        this->audio.play();
+    } else {
+        this->audio.stop();
     }
 }
